@@ -1,0 +1,16 @@
+version: '3'
+services:
+  cms:
+    image: ryannhg/oni-wordpress:4.8-base
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_PASSWORD: example
+    links:
+      - db:mysql
+  db:
+    image: mariadb
+    volumes:
+      - ./data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: example
