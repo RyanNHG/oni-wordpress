@@ -9,8 +9,6 @@ services:
     links:
       - db:mysql
   db:
-    image: mariadb
-    volumes:
-      - ./data:/var/lib/mysql
+    image: ryannhg/oni-mariadb:4.8-base
     environment:
       MYSQL_ROOT_PASSWORD: example
