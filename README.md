@@ -1,5 +1,5 @@
 # Wordpress | Headless
-> Woohoo!
+> __Username__ `admin`, __Password__ `password`
 
 ### Try it out!
 
