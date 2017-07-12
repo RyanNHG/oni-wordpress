@@ -1,5 +1,5 @@
 # Wordpress | Headless
-> __Username__ `admin`, __Password__ `password`
+> Woohoo!
 
 ### Try it out!
 
@@ -8,3 +8,9 @@
 1. __`cd oni-wordpress`__
 
 1. __`docker-compose up`__
+
+1. Go to [http://localhost:8080/wp-login.php](http://localhost:8080/wp-login.php)
+
+    - __Username__: `admin`
+  
+    - __Password__: `password`
