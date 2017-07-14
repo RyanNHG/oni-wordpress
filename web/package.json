@@ -1,0 +1,36 @@
+{
+  "name": "oni-wordpress",
+  "version": "1.0.0",
+  "description": "Headless is life.",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "gulp test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryannhg/oni-wordpress.git"
+  },
+  "keywords": [
+    "wordpress",
+    "cms",
+    "mariadb",
+    "nodejs",
+    "headless"
+  ],
+  "author": "Ryan Haskell-Glatz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ryannhg/oni-wordpress/issues"
+  },
+  "homepage": "https://github.com/ryannhg/oni-wordpress#readme",
+  "dependencies": {
+    "express": "^4.15.3",
+    "morgan": "^1.8.2",
+    "wpapi": "^1.1.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  }
+}
