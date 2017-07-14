@@ -7,7 +7,6 @@ const { wordpress, port } = {
   wordpress: {
     host: process.env.WP_HOST || 'localhost',
     port: process.env.WP_PORT || 8080,
-    apiSuffix: '/wp/v2',
     endpoint: function () {
       return `http://${this.host}:${this.port}`
     }
@@ -18,6 +17,7 @@ const app = express()
 app.use(morgan('tiny'))
 
 const endpoint = wordpress.endpoint()
+
 console.log(`Discovering routes at ${endpoint}...`)
 
 const transformData = (data) =>
@@ -57,20 +57,31 @@ const undottify = (obj) => Object.keys(obj).reduce((_obj, key) => {
   }
 }, {})
 
-WPAPI.discover(endpoint).then(wp => {
-  app.get('/', (req, res) =>
-    wp.people()
-      .then(transformData)
-      .then((data) => res.json(data))
-      .catch(reason => res.json({ error: true, message: reason }))
-  )
+const attemptToConnect = (attemptsLeft) => {
+  if (attemptsLeft > 0) {
+    WPAPI.discover(endpoint).then(wp => {
 
-  app.get('/:type', (req, res) =>
-    wp[req.params.type]()
-      .then(transformData)
-      .then((data) => res.json(data))
-      .catch(reason => res.json({ error: true, message: reason }))
-  )
+      app.get('/', (req, res) =>
+        wp.people()
+          .then(transformData)
+          .then((data) => res.json(data))
+          .catch(reason => res.json({ error: true, message: reason }))
+      )
 
-  app.listen(port, () => console.log(`Ready at http://localhost:${port}`))
-}).catch(console.error)
+      app.get('/:type', (req, res) =>
+        wp[req.params.type]()
+          .then(transformData)
+          .then((data) => res.json(data))
+          .catch(reason => res.json({ error: true, message: reason }))
+      )
+
+      app.listen(port, () => console.log(`Ready at http://localhost:${port}`))
+
+    }).catch(() => {
+      console.info(`Could not connect... attempting ${attemptsLeft} more time${attemptsLeft === 1 ? '' : 's' }...`)
+      setTimeout(() => attemptToConnect(attemptsLeft - 1), 3000)
+    })
+  }
+}
+
+attemptToConnect(10)
