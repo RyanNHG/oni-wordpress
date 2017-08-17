@@ -2,10 +2,10 @@
   "name": "oni-wordpress",
   "version": "1.0.0",
   "description": "Headless is life.",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
     "test": "gulp test"
   },
   "repository": {
@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/ryannhg/oni-wordpress#readme",
   "dependencies": {
+    "axios": "^0.16.2",
     "express": "^4.15.3",
-    "morgan": "^1.8.2",
-    "wpapi": "^1.1.2"
+    "morgan": "^1.8.2"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

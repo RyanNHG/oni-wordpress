@@ -1,7 +1,7 @@
 version: '3'
 services:
   cms:
-    image: ryannhg/oni-cms:blog-demo
+    image: ryannhg/oni-cms:cors
     ports:
       - 8080:80
     environment:
@@ -9,10 +9,20 @@ services:
     links:
       - db:mysql
   db:
-    image: ryannhg/oni-db:blog-demo
+    image: ryannhg/oni-db:cors
+    ports:
+      - 3306:3306
     volumes:
       - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
+  web:
+    build:
+      context: ./web
+    ports:
+      - 3000:3000
+    volumes:
+      - ./web/src:/usr/src/app/src
+    links:
+      - cms:cms
   # TODO: backup (creates content and configuration sql dumps based)
-  # TODO: web (nodejs web server using wpapi)
