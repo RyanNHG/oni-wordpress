@@ -41,7 +41,6 @@ module.exports = ({ endpoint, username, password }) =>
         }
         return routes
       }, {}))
-    .catch(console.error)
     
 const getHandler = ({ fullPath }) => (options) =>
   (options && options.id) ? getById({ fullPath, id: options.id }) :
