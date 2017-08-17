@@ -1,7 +1,7 @@
 version: '3'
 services:
   cms:
-    image: ryannhg/oni-cms:cors
+    image: ryannhg/oni-cms:latest
     ports:
       - 8080:80
     environment:
@@ -9,16 +9,13 @@ services:
     links:
       - db:mysql
   db:
-    image: ryannhg/oni-db:cors
-    ports:
-      - 3306:3306
+    image: ryannhg/oni-db:latest
     volumes:
       - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
   web:
-    build:
-      context: ./web
+    image: ryannhg/oni-web:latest
     ports:
       - 3000:3000
     volumes:

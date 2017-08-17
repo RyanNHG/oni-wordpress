@@ -19,6 +19,14 @@
 
     - __Editor Password__: `password`
 
+1. Or checkout the NodeJS API Demo
+
+    - [http://localhost:3000/blog-posts](http://localhost:3000/blog-posts)
+
+    - [http://localhost:3000/blog-posts?sort=title](http://localhost:3000/blog-posts?sort=title)
+
+    - [http://localhost:3000/blog-posts/26](http://localhost:3000/blog-posts/26)
+
 ---
 
 ## Dev Ops (Mac & Linux)
