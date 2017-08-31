@@ -22,16 +22,23 @@ const debug = (thing) => {
 const contains = (list, item) =>
   list.indexOf(item) !== -1
 
+const doesNotContain = (list, item) =>
+  !contains(list, item)
+
 const startsWith = (str, substrings) =>
   substrings.some(substring => str.indexOf(substring) === 0)
 
-module.exports = ({ endpoint, username, password }) =>
+const getRelativePath = (path, data) =>
+  path.substring(data.namespace.length + 2)
+
+module.exports = ({ endpoint, username, password, keepDefaultTypes }) =>
   axios.get(endpoint)
     .then(response => response.data)
     .then(data => Object.keys(data.routes)
+      .filter(path => (keepDefaultTypes === true) || doesNotContain(defaultTypes, getRelativePath(path, data)))
       .reduce((routes, path) => {
         const route = data.routes[path]
-        const relativePath = path.substring(data.namespace.length + 2)
+        const relativePath = getRelativePath(path, data)
         const fullPath = endpoint + '/' + relativePath
         if (relativePath.length > 0 && relativePath.indexOf('/') === -1) {
           routes[relativePath] = {}
@@ -71,13 +78,40 @@ const handleMany = (response) =>
 
 const transformResults = (results) =>
   results.map(transformResult)
+
+const isManyRelationship = (field) =>
+  field instanceof Array && field[0] !== undefined && field[0].ID !== undefined
+
+const isSingleRelationship = (field) =>
+  field !== undefined && field.ID !== undefined
+
+const transformRelationships = (fields) =>
+  Object.keys(fields).reduce((newFields, fieldName) => {
+    const field = fields[fieldName]
+
+    if (isManyRelationship(field)) {
+      newFields[fieldName] = field.map(item => transformRelationship(item))
+    } else if (isSingleRelationship(field)) {
+      newFields[fieldName] = transformRelationship(field)
+    }else {
+      newFields[fieldName] = field
+    }
+
+    return newFields
+  }, {})
+
+const transformRelationship = (field) => ({
+  id: field.ID,
+  title: field.post_title
+})
   
 const transformResult = (result) => ({
   id: result.id,
-  type: result.type,
+  //type: result.type,
+  slug: result.slug,
   title: result.title ? result.title.rendered : undefined,
   content: result.content ? result.title.content : undefined,
-  fields: undottify(result.acf)
+  fields: undottify(transformRelationships(result.acf))
 })
 
 const undottify = (obj) => Object.keys(obj).reduce((_obj, key) => {

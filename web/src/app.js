@@ -21,11 +21,22 @@ app.use(morgan('tiny'))
 
 const endpoint = wordpress.endpoint()
 
+const urlForType = (req, type) =>
+  req.protocol + '://' + req.get('host') + req.originalUrl + '/' + type
+
 const attemptToConnect = (attemptsLeft) => {
   if (attemptsLeft > 0) {
       ryanApi({ endpoint })
         .then(wp => {
+          app.get('/api', (req, res) =>
+            res.json({
+              endpoints: Object.keys(wp).map((type => urlForType(req, type)))
+            })
+          )
+
           app.get('/api/:type', (req, res) => {
+            console.log(wp)
+            console.log(req.params.type)
             wp[req.params.type]
               .get({
                 sort: req.query ? req.query.sort : undefined

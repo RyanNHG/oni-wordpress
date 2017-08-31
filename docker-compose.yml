@@ -1,7 +1,7 @@
 version: '3'
 services:
   cms:
-    image: ryannhg/oni-cms:latest
+    image: ryannhg/oni-cms:oni-4.8
     ports:
       - 8080:80
     environment:
@@ -9,7 +9,7 @@ services:
     links:
       - db:mysql
   db:
-    image: ryannhg/oni-db:latest
+    image: ryannhg/oni-db:oni-4.8
     volumes:
       - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
     environment:
