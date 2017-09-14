@@ -1,5 +1,6 @@
 version: '3'
 services:
+
   cms:
     image: ryannhg/oni-cms:oni-4.8
     ports:
@@ -8,18 +9,34 @@ services:
       WORDPRESS_DB_PASSWORD: password
     links:
       - db:mysql
+
   db:
     image: ryannhg/oni-db:oni-4.8
     volumes:
       - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
+    ports:
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: password
-  web:
-    image: ryannhg/oni-web:latest
+
+  # web:
+  #   image: ryannhg/oni-web:latest
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - ./web/src:/usr/src/app/src
+  #   links:
+  #     - cms:cms
+
+  sql-web:
+    build:
+      context: ./sql-web
+      dockerfile: Dockerfile
     ports:
-      - 3000:3000
+      - 5000:5000
     volumes:
-      - ./web/src:/usr/src/app/src
+      - ./sql-web/src:/usr/src/app/src
     links:
-      - cms:cms
+      - db:db
+
   # TODO: backup (creates content and configuration sql dumps based)
