@@ -5,7 +5,7 @@ module.exports = (sequelize) => {
   if (PostMeta !== undefined) {
     return PostMeta
   }
-  
+
   PostMeta = sequelize.define('wp_postmeta', {
     metaId: {
       field: 'meta_id',
@@ -14,12 +14,6 @@ module.exports = (sequelize) => {
       allowNull: false,
       autoIncrement: true
     },
-    // postId: {
-    //   field: 'post_id',
-    //   type: Sequelize.BIGINT(20).UNSIGNED,
-    //   allowNull: false,
-    //   defaultValue: 0
-    // },
     metaKey: {
       field: 'meta_key',
       type: Sequelize.STRING

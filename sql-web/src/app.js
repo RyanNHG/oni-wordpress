@@ -31,8 +31,21 @@ const runApp = (sequelize) => {
 
   const getPostsOfType = ({ Post, PostMeta }, postType) =>
     Post.findAll({
-      where: { 'post_type': postType },
+      where: { 'post_type': postType, 'post_status': 'publish' },
       attributes: { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId' ] }
+    })
+
+  const getPost = ({ Post, PostMeta }, postType, postSlug) =>
+    Post.findOne({
+      where: { 'post_type': postType, 'post_name': postSlug },
+      attributes: { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId' ] }
+    })
+
+  const respondWithError = (res) => (reason) =>
+    res.json({
+      error: true,
+      message: reason,
+      data: []
     })
 
   // Types
@@ -45,6 +58,7 @@ const runApp = (sequelize) => {
           data: types
         })
       )
+      .catch(respondWithError(res))
   })
 
   app.get('/:type', (req, res) => {
@@ -57,6 +71,21 @@ const runApp = (sequelize) => {
           data: posts
         })
       )
+      .catch(respondWithError(res))
+  })
+
+  app.get('/:type/:slug', (req, res) => {
+    const type = req.params.type
+    const slug = req.params.slug
+    getPost({ Post, PostMeta }, type, slug)
+      .then(post =>
+        res.json({
+          error: false,
+          message: `Found 1 ${type}.`,
+          data: [ post ]
+        })
+      )
+      .catch(respondWithError(res))
   })
 
   app.listen(5000, () => console.log(`Ready at http://localhost:5000`))
