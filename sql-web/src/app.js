@@ -30,23 +30,64 @@ const runApp = (sequelize) => {
     attributes: mysteryFields
   }]
 
+  const metaListToObject = (list) =>
+    list.reduce((obj, { metaKey, metaValue }) => {
+      obj[metaKey] = metaValue
+      return obj
+    }, {})
+
+  const undottify = (obj) => Object.keys(obj).reduce((_obj, key) => {
+    const value = obj[key]
+    const pieces = key.split('.')
+    const firstPart = pieces.slice(0,1).join('.')
+    const secondPart = pieces.slice(1,2).join('.')
+    if (secondPart === '') {
+      _obj[firstPart] = value
+      return _obj
+    } else {
+      const theRest = pieces.slice(1).join('.')
+      const innerObj = {}
+      innerObj[theRest] = value
+      _obj[firstPart] = _obj[firstPart] || {}
+      _obj[firstPart][secondPart] = (theRest.indexOf('.') === -1)
+        ? value
+        : undottify(innerObj)[secondPart]
+      return _obj
+    }
+  }, {})
+
+  const transformPost = (post) => undottify(
+    metaListToObject([
+      { metaKey: 'id', metaValue: post.id },
+      { metaKey: 'slug', metaValue: post.postName },
+      ...post['wp_postmeta']
+    ])
+  )
+
+  const transformPosts = posts =>
+    posts.map(transformPost)
+
   const getDistinctPostTypes = ({ Post }) =>
     Post.aggregate('post_type', 'DISTINCT', { plain: false })
       .then(types => types.map(obj => obj.DISTINCT))
 
   const getPostsOfType = ({ Post, PostMeta }, postType) =>
-    Post.findAll({
-      where: { 'post_type': postType },
-      attributes: mysteryFields,
-      include: postMetaInclude
-    })
+    Post
+      .findAll({
+        where: { 'post_type': postType },
+        attributes: mysteryFields,
+        include: postMetaInclude
+      })
+      .then(transformPosts)
 
   const getPost = ({ Post, PostMeta }, postType, postId) =>
-    Post.findOne({
-      where: { 'post_type': postType, 'id': postId },
-      attributes: mysteryFields,
-      include: postMetaInclude
-    })
+    Post
+      .findOne({
+        where: { 'post_type': postType, 'id': postId },
+        attributes: mysteryFields,
+        include: postMetaInclude
+      })
+      .then(transformPost)
 
   const respondWithError = (res) => (reason) =>
     res.json({
