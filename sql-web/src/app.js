@@ -11,11 +11,7 @@ const { username, password, host, port, database } = {
 }
 
 const runApp = (sequelize) => {
-  const modelFunctions = require('./models')
-  const { Post, PostMeta } = Object.keys(modelFunctions).reduce((obj, key) => {
-    obj[key] = modelFunctions[key](sequelize)
-    return obj
-  }, {})
+  const { Post, PostMeta } = require('./models')(sequelize)
 
   const app = express()
   app.use(morgan('tiny'))
@@ -25,20 +21,31 @@ const runApp = (sequelize) => {
     return thing
   }
 
+  const mysteryFields =
+    { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId', 'guid' ] }
+
+  const postMetaInclude = [{
+    model: PostMeta,
+    where: { 'ID': Sequelize.col('post_id'), 'metaKey': { $notLike: `\\_%` } },
+    attributes: mysteryFields
+  }]
+
   const getDistinctPostTypes = ({ Post }) =>
     Post.aggregate('post_type', 'DISTINCT', { plain: false })
       .then(types => types.map(obj => obj.DISTINCT))
 
   const getPostsOfType = ({ Post, PostMeta }, postType) =>
     Post.findAll({
-      where: { 'post_type': postType, 'post_status': 'publish' },
-      attributes: { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId' ] }
+      where: { 'post_type': postType },
+      attributes: mysteryFields,
+      include: postMetaInclude
     })
 
-  const getPost = ({ Post, PostMeta }, postType, postSlug) =>
+  const getPost = ({ Post, PostMeta }, postType, postId) =>
     Post.findOne({
-      where: { 'post_type': postType, 'post_name': postSlug },
-      attributes: { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId' ] }
+      where: { 'post_type': postType, 'id': postId },
+      attributes: mysteryFields,
+      include: postMetaInclude
     })
 
   const respondWithError = (res) => (reason) =>
@@ -81,8 +88,8 @@ const runApp = (sequelize) => {
       .then(post =>
         res.json({
           error: false,
-          message: `Found 1 ${type}.`,
-          data: [ post ]
+          message: post ? `Found 1 ${type}.` : `Found 0 ${type}s.`,
+          data: post ? [ post ] : []
         })
       )
       .catch(respondWithError(res))
