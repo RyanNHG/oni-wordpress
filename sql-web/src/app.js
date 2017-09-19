@@ -2,6 +2,8 @@ const express = require('express')
 const morgan = require('morgan')
 const Sequelize = require('sequelize')
 
+const PORT = process.env.PORT || 5000
+
 const { username, password, host, port, database } = {
   username: 'root',
   password: 'password',
@@ -11,15 +13,10 @@ const { username, password, host, port, database } = {
 }
 
 const runApp = (sequelize) => {
-  const { Post, PostMeta } = require('./models')(sequelize)
+  const { Post, PostMeta, Options } = require('./models')(sequelize)
 
   const app = express()
   app.use(morgan('tiny'))
-
-  const debug = (label) => (thing) => {
-    console.log(label, thing)
-    return thing
-  }
 
   const mysteryFields =
     { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId', 'guid' ] }
@@ -67,76 +64,89 @@ const runApp = (sequelize) => {
   const transformPosts = posts =>
     posts.map(transformPost)
 
-  const getDistinctPostTypes = ({ Post }) =>
-    Post.aggregate('post_type', 'DISTINCT', { plain: false })
-      .then(types => types.map(obj => obj.DISTINCT))
+  const transformTypeString = (types) => types.optionValue
+    .split('rest_base";')
+    .filter(str => str.indexOf('s') === 0)
+    .map(str => str.substring(str.indexOf('"') + 1, str.length))
+    .map(str => str.substring(0, str.indexOf('"')))
+
+  const lazyMansPlural = (word) => [
+    word,
+    word + 's',
+    word ? word.substring(0, word.length - 1) : ''
+  ]
+
+  const getDistinctPostTypes = ({ Options }) =>
+    Options.findOne({
+      where: { 'option_name': 'cptui_post_types' },
+      attributes: mysteryFields
+    })
+      .then(transformTypeString)
 
   const getPostsOfType = ({ Post, PostMeta }, postType) =>
-    Post
-      .findAll({
-        where: { 'post_type': postType },
-        attributes: mysteryFields,
-        include: postMetaInclude
-      })
+    Post.findAll({
+      where: { 'post_type': lazyMansPlural(postType) },
+      attributes: mysteryFields,
+      include: postMetaInclude
+    })
       .then(transformPosts)
 
   const getPost = ({ Post, PostMeta }, postType, postId) =>
-    Post
-      .findOne({
-        where: { 'post_type': postType, 'id': postId },
-        attributes: mysteryFields,
-        include: postMetaInclude
-      })
+    Post.findOne({
+      where: { 'post_type': lazyMansPlural(postType), 'id': postId },
+      attributes: mysteryFields,
+      include: postMetaInclude
+    })
       .then(transformPost)
 
   const respondWithError = (res) => (reason) =>
     res.json({
       error: true,
-      message: reason,
+      message: reason instanceof String ? reason : 'No results found.',
       data: []
     })
 
   // Types
   app.get('/types', (req, res) => {
-    getDistinctPostTypes({ Post })
+    getDistinctPostTypes({ Options })
       .then(types =>
         res.json({
           error: false,
-          message: `Found ${types.length} type${types.length === 1 ? '' : 's'}.`,
+          message: `Found ${types.length} custom type${types.length === 1 ? '' : 's'}.`,
           data: types
         })
       )
       .catch(respondWithError(res))
   })
 
-  app.get('/:type', (req, res) => {
+  app.get('/types/:type', (req, res) => {
     const type = req.params.type
     getPostsOfType({ Post, PostMeta }, type)
       .then(posts =>
         res.json({
           error: false,
-          message: `Found ${posts.length} ${type}${posts.length === 1 ? '' : 's'}.`,
+          message: `Found ${posts.length} result${posts.length === 1 ? '' : 's'}.`,
           data: posts
         })
       )
       .catch(respondWithError(res))
   })
 
-  app.get('/:type/:slug', (req, res) => {
+  app.get('/types/:type/:slug', (req, res) => {
     const type = req.params.type
     const slug = req.params.slug
     getPost({ Post, PostMeta }, type, slug)
       .then(post =>
         res.json({
           error: false,
-          message: post ? `Found 1 ${type}.` : `Found 0 ${type}s.`,
+          message: post ? `Found 1 result.` : `Found 0 results.`,
           data: post ? [ post ] : []
         })
       )
       .catch(respondWithError(res))
   })
 
-  app.listen(5000, () => console.log(`Ready at http://localhost:5000`))
+  app.listen(PORT, () => console.log(`Ready at http://localhost:${PORT}`))
 }
 
 const start = () => {
