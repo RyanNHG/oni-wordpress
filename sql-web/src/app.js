@@ -9,11 +9,6 @@ const Sequelize = require('sequelize')
 const { graphqlExpress, graphiqlExpress } = require('apollo-server-express')
 const { makeExecutableSchema } = require('graphql-tools')
 
-const schema = makeExecutableSchema({
-  typeDefs: require('./graphql/schema'),
-  resolvers: require('./graphql/resolvers')
-})
-
 const PORT = process.env.PORT || 5000
 
 const { username, password, host, port, database } = {
@@ -89,28 +84,34 @@ const runApp = (sequelize) => {
     word ? word.substring(0, word.length - 1) : ''
   ]
 
-  const getDistinctPostTypes = ({ Options }) =>
+  const getDistinctPostTypes = () =>
     Options.findOne({
       where: { 'option_name': 'cptui_post_types' },
       attributes: mysteryFields
     })
       .then(transformTypeString)
 
-  const getPostsOfType = ({ Post, PostMeta }, postType) =>
+  const getPosts = (postType) =>
     Post.findAll({
       where: { 'post_type': lazyMansPlural(postType) },
       attributes: mysteryFields,
       include: postMetaInclude
     })
-      .then(transformPosts)
 
-  const getPost = ({ Post, PostMeta }, postType, postId) =>
+  const getPost = (postType, postId) =>
     Post.findOne({
       where: { 'post_type': lazyMansPlural(postType), 'id': postId },
       attributes: mysteryFields,
       include: postMetaInclude
     })
-      .then(transformPost)
+
+  const schema = makeExecutableSchema({
+    typeDefs: require('./graphql/schema'),
+    resolvers: require('./graphql/resolvers')({
+      getPosts,
+      getPost
+    })
+  })
 
   const respondWithError = (res) => (reason) =>
     res.json({
@@ -129,7 +130,7 @@ const runApp = (sequelize) => {
 
   // Types
   app.get('/api', (req, res) => {
-    getDistinctPostTypes({ Options })
+    getDistinctPostTypes()
       .then(types =>
         res.json({
           error: false,
@@ -142,7 +143,8 @@ const runApp = (sequelize) => {
 
   app.get('/api/:type', (req, res) => {
     const type = req.params.type
-    getPostsOfType({ Post, PostMeta }, type)
+    getPosts(type)
+      .then(transformPosts)
       .then(posts =>
         res.json({
           error: false,
@@ -156,7 +158,8 @@ const runApp = (sequelize) => {
   app.get('/api/:type/:slug', (req, res) => {
     const type = req.params.type
     const slug = req.params.slug
-    getPost({ Post, PostMeta }, type, slug)
+    getPost(type, slug)
+      .then(transformPost)
       .then(post =>
         res.json({
           error: false,
