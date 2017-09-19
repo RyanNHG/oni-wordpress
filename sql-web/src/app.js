@@ -44,8 +44,8 @@ const runApp = (sequelize) => {
   const undottify = (obj) => Object.keys(obj).reduce((_obj, key) => {
     const value = obj[key]
     const pieces = key.split('.')
-    const firstPart = pieces.slice(0,1).join('.')
-    const secondPart = pieces.slice(1,2).join('.')
+    const firstPart = pieces.slice(0, 1).join('.')
+    const secondPart = pieces.slice(1, 2).join('.')
     if (secondPart === '') {
       _obj[firstPart] = value
       return _obj
@@ -65,7 +65,8 @@ const runApp = (sequelize) => {
     metaListToObject([
       { metaKey: 'id', metaValue: post.id },
       { metaKey: 'slug', metaValue: post.postName },
-      ...post['wp_postmeta']
+      { metaKey: 'title', metaValue: post.postTitle },
+      ...(post['wp_postmeta'] ? post['wp_postmeta'] : [])
     ])
   )
 
@@ -78,12 +79,6 @@ const runApp = (sequelize) => {
     .map(str => str.substring(str.indexOf('"') + 1, str.length))
     .map(str => str.substring(0, str.indexOf('"')))
 
-  const lazyMansPlural = (word) => [
-    word,
-    word + 's',
-    word ? word.substring(0, word.length - 1) : ''
-  ]
-
   const getDistinctPostTypes = () =>
     Options.findOne({
       where: { 'option_name': 'cptui_post_types' },
@@ -91,27 +86,59 @@ const runApp = (sequelize) => {
     })
       .then(transformTypeString)
 
-  const getPosts = (postType) =>
+  const getTypes = () =>
+    Post.aggregate('post_type', 'DISTINCT', { plain: false })
+      .then(types => types.map(obj => obj.DISTINCT))
+
+  const getPosts = (postType, fetchMeta) =>
     Post.findAll({
-      where: { 'post_type': lazyMansPlural(postType) },
+      where: { 'post_type': (postType) },
       attributes: mysteryFields,
-      include: postMetaInclude
+      include: fetchMeta ? postMetaInclude : []
     })
 
-  const getPost = (postType, postId) =>
+  const getPost = (postType, postId, fetchMeta) =>
     Post.findOne({
-      where: { 'post_type': lazyMansPlural(postType), 'id': postId },
+      where: { 'post_type': (postType), 'id': postId },
       attributes: mysteryFields,
-      include: postMetaInclude
+      include: fetchMeta ? postMetaInclude : []
     })
 
-  const schema = makeExecutableSchema({
-    typeDefs: require('./graphql/schema'),
-    resolvers: require('./graphql/resolvers')({
-      getPosts,
-      getPost
+  const getProfessionals = () =>
+    getPosts('professional', true)
+      .then(transformPosts)
+
+  const getProfessional = (id) =>
+    getPost('professional', id, true)
+      .then(transformPost)
+
+  const getJobTitle = (id) =>
+    getPost('job_title', id, false)
+      .then(transformPost)
+
+  try {
+    const schema = makeExecutableSchema({
+      typeDefs: require('./graphql/schema'),
+      resolvers: require('./graphql/resolvers')({
+        getTypes,
+        getPosts,
+        getPost,
+        getProfessional,
+        getProfessionals,
+        getJobTitle
+      })
     })
-  })
+
+    app.use('/graphql', graphqlExpress({
+      schema: schema
+    }))
+
+    app.use('/', graphiqlExpress({
+      endpointURL: '/graphql'
+    }))
+  } catch (e) {
+    console.error(e)
+  }
 
   const respondWithError = (res) => (reason) =>
     res.json({
@@ -119,14 +146,6 @@ const runApp = (sequelize) => {
       message: reason instanceof String ? reason : 'No results found.',
       data: []
     })
-
-  app.use('/graphql', graphqlExpress({
-    schema: schema
-  }))
-
-  app.use('/', graphiqlExpress({
-    endpointURL: '/graphql'
-  }))
 
   // Types
   app.get('/api', (req, res) => {
