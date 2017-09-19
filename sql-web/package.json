@@ -10,7 +10,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "apollo-server-express": "^1.1.2",
+    "body-parser": "^1.18.1",
     "express": "^4.15.4",
+    "graphql": "^0.11.3",
+    "graphql-tools": "^1.2.2",
     "morgan": "^1.8.2",
     "mysql2": "^1.4.2",
     "require-directory": "^2.1.1",

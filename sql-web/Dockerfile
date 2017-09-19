@@ -3,9 +3,10 @@ FROM node
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
+RUN npm install -g nodemon --silent
+
 COPY package.json .
 COPY package-lock.json .
 RUN npm install --silent
-RUN npm install -g nodemon --silent
 
 CMD ["npm", "run", "dev"]

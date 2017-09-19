@@ -1,6 +1,18 @@
+// Express
 const express = require('express')
+const bodyParser = require('body-parser')
 const morgan = require('morgan')
+// Sequelize
 const Sequelize = require('sequelize')
+
+// GraphQL
+const { graphqlExpress, graphiqlExpress } = require('apollo-server-express')
+const { makeExecutableSchema } = require('graphql-tools')
+
+const schema = makeExecutableSchema({
+  typeDefs: require('./graphql/schema'),
+  resolvers: require('./graphql/resolvers')
+})
 
 const PORT = process.env.PORT || 5000
 
@@ -17,6 +29,7 @@ const runApp = (sequelize) => {
 
   const app = express()
   app.use(morgan('tiny'))
+  app.use(bodyParser.json())
 
   const mysteryFields =
     { exclude: [ 'createdAt', 'updatedAt', 'wpPostmetumMetaId', 'guid' ] }
@@ -106,8 +119,16 @@ const runApp = (sequelize) => {
       data: []
     })
 
+  app.use('/graphql', graphqlExpress({
+    schema: schema
+  }))
+
+  app.use('/', graphiqlExpress({
+    endpointURL: '/graphql'
+  }))
+
   // Types
-  app.get('/types', (req, res) => {
+  app.get('/api', (req, res) => {
     getDistinctPostTypes({ Options })
       .then(types =>
         res.json({
@@ -119,7 +140,7 @@ const runApp = (sequelize) => {
       .catch(respondWithError(res))
   })
 
-  app.get('/types/:type', (req, res) => {
+  app.get('/api/:type', (req, res) => {
     const type = req.params.type
     getPostsOfType({ Post, PostMeta }, type)
       .then(posts =>
@@ -132,7 +153,7 @@ const runApp = (sequelize) => {
       .catch(respondWithError(res))
   })
 
-  app.get('/types/:type/:slug', (req, res) => {
+  app.get('/api/:type/:slug', (req, res) => {
     const type = req.params.type
     const slug = req.params.slug
     getPost({ Post, PostMeta }, type, slug)
