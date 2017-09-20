@@ -15,7 +15,7 @@ done
 
 cms_container="${container_prefix}_cms_1"
 db_container="${container_prefix}_db_1"
-web_container="${container_prefix}_web_1"
+# web_container="${container_prefix}_web_1"
 
 # File System
 echo "- Backing up Wordpress file system (${cms_container})..."
@@ -25,7 +25,7 @@ docker exec $cms_container cp -a /var/www/html/. /usr/src/wordpress/
 echo "- Backing up Wordpress database (${db_container})..."
 
 # Web Server
-echo "- Backing up NodeJS web server (${web_container})..."
+# echo "- Backing up NodeJS web server (${web_container})..."
 
 # Backup Wordpress Configuration (TODO: Move to .sh file in MariaDB Docker image)
 docker exec $db_container sh -c "rm /docker-entrypoint-initdb.d/*"
@@ -78,10 +78,10 @@ docker pause $db_container
 docker commit $db_container ${author}/oni-db:${tag}
 docker unpause $db_container
 
-echo "- Commiting web server (${author}/oni-web:${tag})..."
-docker pause $web_container
-docker commit $web_container ${author}/oni-web:${tag}
-docker unpause $web_container
+# echo "- Commiting web server (${author}/oni-web:${tag})..."
+# docker pause $web_container
+# docker commit $web_container ${author}/oni-web:${tag}
+# docker unpause $web_container
 
 # Push to Docker Hub?
 should_push=
@@ -95,7 +95,7 @@ if [ $should_push = "Y" ] || [ $should_push = "y" ]; then
     echo "Pushing..."
     docker push ${author}/oni-cms:${tag}
     docker push ${author}/oni-db:${tag}
-    docker push ${author}/oni-web:${tag}
+    # docker push ${author}/oni-web:${tag}
 else
     echo "Not pushing."
 fi
