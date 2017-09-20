@@ -2,7 +2,7 @@ version: '3'
 services:
 
   cms:
-    image: ryannhg/oni-cms:oni-4.8
+    image: ryannhg/oni-cms:graphql
     ports:
       - 8080:80
     environment:
@@ -11,7 +11,7 @@ services:
       - db:mysql
 
   db:
-    image: ryannhg/oni-db:oni-4.8
+    image: ryannhg/oni-db:graphql
     volumes:
       - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
     ports:
