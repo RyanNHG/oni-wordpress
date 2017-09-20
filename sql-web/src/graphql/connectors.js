@@ -94,12 +94,12 @@ module.exports = ({ Post, PostMeta }) => {
     : (typeof value === 'boolean') ? (value ? '1' : '0')
     : value
 
-  const selectDistinct = (key, value) => debug([
+  const selectDistinct = (key, value) => [
     '(SELECT DISTINCT post_id FROM',
     PostMeta.getTableName(),
     'WHERE',
     `meta_key = '${key}' AND meta_value = ${sqlValue(value)})`
-  ].join(' '))
+  ].join(' ')
 
   const getDistinctQueries = (where) =>
     Object.keys(where)
