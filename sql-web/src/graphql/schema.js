@@ -4,12 +4,13 @@ module.exports = `
     postTypes: [String]
     posts(type: String!, id: Int, fetchMeta: Boolean): [Post!]
     professionals(id: Int): [Professional!]
+    fruits(id: Int, favoriteColor: String, firstName: String): [Fruit!]
   }
 
   type Post {
     id: Int!
-    postName: String
-    wp_postmeta: [PostMeta!]
+    postName: String!
+    wp_postmeta: [PostMeta]
   }
 
   type PostMeta {
@@ -23,6 +24,14 @@ module.exports = `
     title: String!
   }
 
+  type Fruit implements Item {
+    id: Int!
+    slug: String!
+    title: String!
+    favoriteColor: String
+    name: Name
+  }
+
   type Professional implements Item {
     id: Int!
     slug: String!
@@ -31,12 +40,14 @@ module.exports = `
     biography: Biography!
     friend: Professional
     jobTitle: JobTitle!
+    favoriteColor: String
   }
 
   type Name {
-    first: String!
+    first: String
     middle: String
-    last: String!
+    last: String
+    full: String
   }
 
   type Biography {
