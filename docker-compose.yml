@@ -3,8 +3,6 @@ services:
 
   mysql:
     image: ryannhg/oni-db:latest
-    ports:
-      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: password
 
@@ -17,7 +15,7 @@ services:
       WP_ENDPOINT_URL: http://worker/api
       WP_SECRET_TOKEN: super-secret-token
     volumes:
-      - ${PWD}/cms/publish-hook:/var/www/html/wp-content/plugins/publish-hook
+      - ./cms/publish-hook:/var/www/html/wp-content/plugins/publish-hook
     links:
       - mysql
 
@@ -25,34 +23,32 @@ services:
     build:
       context: ./worker
       dockerfile: Dockerfile
-    ports:
-      - 5000:80
-      - 5001:9229
+    image: ryannhg/oni-worker:latest
     environment:
       WP_SECRET_TOKEN: super-secret-token
       LIVE_MONGO_URI: mongodb://mongo/cms-live
       PREVIEW_MONGO_URI: mongodb://mongo/cms-preview
     volumes:
-      - ./worker:/usr/src/app
+      - ./worker/app.js:/usr/src/app/app.js
+      - ./worker/data.js:/usr/src/app/data.js
+      - ./worker/logic.js:/usr/src/app/logic.js
     links:
       - cms
 
   mongo:
     image: mongo
-    ports:
-      - 27017:27017
 
   web-live:
     build:
       context: ./web
       dockerfile: Dockerfile
+    image: ryannhg/oni-web:latest
     environment:
       MONGO_URI: mongodb://mongo/cms-live
     ports:
       - 3000:80
-      - 3001:9229
     volumes:
-      - ./web:/usr/src/app
+      - ./web/app.js:/usr/src/app/app.js
     links:
       - mongo
 
@@ -60,12 +56,12 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    image: ryannhg/oni-web:latest
     environment:
       MONGO_URI: mongodb://mongo/cms-preview
     ports:
       - 4000:80
-      - 4001:9229
     volumes:
-      - ./web:/usr/src/app
+      - ./web/app.js:/usr/src/app/app.js
     links:
       - mongo
