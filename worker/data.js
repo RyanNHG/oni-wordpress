@@ -13,7 +13,7 @@ const storeBasedOnStatus = (doc) => {
     case 'trash':
       return removeFromBothDatabases(doc)
     default:
-      return removeFromLiveAndStoreInPreviewDatabase(doc)
+      return storeInPreviewDatabase(doc)
   }
 }
 
