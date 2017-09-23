@@ -1,42 +1,51 @@
 version: '3'
 services:
 
-  cms:
-    image: ryannhg/oni-cms:graphql
-    ports:
-      - 8080:80
-    environment:
-      WORDPRESS_DB_PASSWORD: password
-    links:
-      - db:mysql
-
-  db:
-    image: ryannhg/oni-db:graphql
-    volumes:
-      - ./cms/wordpress-content.sql:/docker-entrypoint-initdb.d/wordpress-content.sql
+  mysql:
+    image: mariadb
     ports:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: password
 
-  # web:
-  #   image: ryannhg/oni-web:latest
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - ./web/src:/usr/src/app/src
-  #   links:
-  #     - cms:cms
+  cms:
+    image: wordpress
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_PASSWORD: password
+      WP_ENDPOINT_URL: http://worker/api
+      WP_SECRET_TOKEN: super-secret-token
+    volumes:
+      - ${PWD}/cms/publish-hook:/var/www/html/wp-content/plugins/publish-hook
+    links:
+      - mysql
 
-  sql-web:
+  worker:
     build:
-      context: ./sql-web
+      context: ./worker
       dockerfile: Dockerfile
     ports:
-      - 5000:5000
+      - 5000:80
+    environment:
+      WP_SECRET_TOKEN: super-secret-token
     volumes:
-      - ./sql-web/src:/usr/src/app/src
+      - ./worker:/usr/src/app
     links:
-      - db:db
+      - cms
 
-  # TODO: backup (creates content and configuration sql dumps based)
+  mongo:
+    image: mongo
+    ports:
+      - 27017:27017
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - 3000:80
+    volumes:
+      - ./web:/usr/src/app
+    links:
+      - mongo
