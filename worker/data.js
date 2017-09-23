@@ -1,30 +1,10 @@
-const undottify = (obj) => Object.keys(obj).reduce((_obj, key) => {
-  const value = obj[key]
-  const pieces = key.split('.')
-  const firstPart = pieces.slice(0, 1).join('.')
-  const secondPart = pieces.slice(1, 2).join('.')
-  if (secondPart === '') {
-    _obj[firstPart] = value
-    return _obj
-  } else {
-    const theRest = pieces.slice(1).join('.')
-    const innerObj = {}
-    innerObj[theRest] = value
-    _obj[firstPart] = _obj[firstPart] || {}
-    _obj[firstPart][secondPart] = (theRest.indexOf('.') === -1)
-      ? value
-      : undottify(innerObj)[secondPart]
-    return _obj
-  }
-}, {})
+const mongoose = require('mongoose')
+const { transformPost, error } = require('./logic')
 
-const transformPost = ({ id, slug, status, type, acf }) => ({
-  id,
-  slug,
-  status,
-  type,
-  acf: undottify(acf)
-})
+const connections = {
+  live: mongoose.connect(process.env.LIVE_MONGO_URI),
+  preview: mongoose.connect(process.env.PREVIEW_MONGO_URI)
+}
 
 const storeBasedOnStatus = (doc) => {
   switch (doc.status) {
@@ -37,42 +17,38 @@ const storeBasedOnStatus = (doc) => {
   }
 }
 
-const storeDocument = (data) =>
-  storeBasedOnStatus(transformPost(data))
+const storeInDatabase = (conn) => (doc) =>
+  Promise.resolve('Stored document')
+    .catch(error('storeInDatabase'))
 
-const storeInLiveDatabase = (doc) =>
-  Promise.resolve(`Stored ${doc.id} in the live database.`)
+const removeFromDatabase = (conn) => (doc) =>
+  Promise.resolve('Removed document')
+    .catch(error('removeFromDatabase'))
 
-const removeFromLiveDatabase = (doc) =>
-  Promise.resolve(`Removed ${doc.id} from the live database.`)
+const storeInLiveDatabase =
+  storeInDatabase(connections.live)
 
-const storeInPreviewDatabase = (doc) =>
-  Promise.resolve(`Stored ${doc.id} in the preview database.`)
+const removeFromLiveDatabase =
+  removeFromDatabase(connections.live)
 
-const removeFromPreviewDatabase = (doc) =>
-  Promise.resolve(`Removed ${doc.id} from the preview database.`)
+const storeInPreviewDatabase =
+  storeInDatabase(connections.preview)
+
+const removeFromPreviewDatabase =
+  removeFromDatabase(connections.preview)
 
 const storeInBothDatabases = (doc) =>
-  Promise.all([
-    storeInLiveDatabase(doc),
-    storeInPreviewDatabase(doc)
-  ])
+  Promise.all([ storeInLiveDatabase(doc), storeInPreviewDatabase(doc) ])
     .then(_msgs => `Stored ${doc.id} in both databases.`)
 
 const removeFromBothDatabases = (doc) =>
-  Promise.all([
-    removeFromLiveDatabase(doc),
-    removeFromPreviewDatabase(doc)
-  ])
+  Promise.all([ removeFromLiveDatabase(doc), removeFromPreviewDatabase(doc) ])
     .then(_msgs => `Removed ${doc.id} from both databases.`)
 
 const removeFromLiveAndStoreInPreviewDatabase = (doc) =>
-  Promise.all([
-    storeInPreviewDatabase(doc),
-    removeFromLiveDatabase(doc)
-  ])
+  Promise.all([ storeInPreviewDatabase(doc), removeFromLiveDatabase(doc) ])
     .then(_msgs => `Removed ${doc.id} from live, and stored it in preview.`)
 
 module.exports = {
-  storeDocument
+  storePost: (data) => storeBasedOnStatus(transformPost(data))
 }

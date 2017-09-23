@@ -30,6 +30,8 @@ services:
       - 5001:9229
     environment:
       WP_SECRET_TOKEN: super-secret-token
+      LIVE_MONGO_URI: mongodb://mongo/cms-live
+      PREVIEW_MONGO_URI: mongodb://mongo/cms-preview
     volumes:
       - ./worker:/usr/src/app
     links:
@@ -44,6 +46,8 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    environment:
+      MONGO_URI: mongodb://mongo/cms-live
     ports:
       - 3000:80
       - 3001:9229

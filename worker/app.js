@@ -11,12 +11,12 @@ const app = express()
 app.use(bodyParser.json())
 app.use(morgan('tiny'))
 
-const { storeDocument } = require('./data.js')
+const { storePost } = require('./data.js')
 
 // Routes
 app.post('/api', (req, res) =>
   (token === req.body.token)
-    ? storeDocument(req.body.data)
+    ? storePost(req.body.data)
         .then(message => res.json({
           error: false,
           message
