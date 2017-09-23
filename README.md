@@ -15,9 +15,9 @@
     - __Admin Username__: `admin`
 
     - __Admin Password__: `password`
-    
-    - __Editor Username__: `editor`
 
-    - __Editor Password__: `password`
+1. Allow magic to sync content with two databases in a MongoDB instance.
 
-1. Check out the website: [http://localhost:3000](http://localhost:3000)
+1. Check out the live website: [http://localhost:3000](http://localhost:3000)
+
+1. Or check out the preview website: [http://localhost:4000](http://localhost:4000)

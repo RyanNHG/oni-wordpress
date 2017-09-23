@@ -42,7 +42,7 @@ services:
     ports:
       - 27017:27017
 
-  web:
+  web-live:
     build:
       context: ./web
       dockerfile: Dockerfile
@@ -51,6 +51,20 @@ services:
     ports:
       - 3000:80
       - 3001:9229
+    volumes:
+      - ./web:/usr/src/app
+    links:
+      - mongo
+
+  web-preview:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    environment:
+      MONGO_URI: mongodb://mongo/cms-preview
+    ports:
+      - 4000:80
+      - 4001:9229
     volumes:
       - ./web:/usr/src/app
     links:
