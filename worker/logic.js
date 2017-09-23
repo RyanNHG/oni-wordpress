@@ -23,7 +23,7 @@ const transformPost = ({ id, slug, status, type, acf }) => ({
   slug,
   status,
   type,
-  acf: undottify(acf)
+  data: undottify(acf)
 })
 
 const error = (label) => (err) => {

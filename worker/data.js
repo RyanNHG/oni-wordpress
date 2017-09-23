@@ -2,8 +2,8 @@ const mongoose = require('mongoose')
 const { transformPost, error } = require('./logic')
 
 const connections = {
-  live: mongoose.connect(process.env.LIVE_MONGO_URI),
-  preview: mongoose.connect(process.env.PREVIEW_MONGO_URI)
+  live: mongoose.createConnection(process.env.LIVE_MONGO_URI),
+  preview: mongoose.createConnection(process.env.PREVIEW_MONGO_URI)
 }
 
 const storeBasedOnStatus = (doc) => {
@@ -18,11 +18,17 @@ const storeBasedOnStatus = (doc) => {
 }
 
 const storeInDatabase = (conn) => (doc) =>
-  Promise.resolve('Stored document')
+  new Promise((resolve, reject) =>
+    conn.collection(doc.type)
+      .update({ id: doc.id }, doc, { upsert: true }, resolve)
+  )
     .catch(error('storeInDatabase'))
 
 const removeFromDatabase = (conn) => (doc) =>
-  Promise.resolve('Removed document')
+  new Promise((resolve, reject) =>
+    conn.collection(doc.type)
+      .remove({ id: doc.id }, resolve)
+  )
     .catch(error('removeFromDatabase'))
 
 const storeInLiveDatabase =
