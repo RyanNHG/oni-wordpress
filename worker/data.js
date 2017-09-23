@@ -14,6 +14,7 @@ const storeBasedOnStatus = (doc) => {
       return removeFromBothDatabases(doc)
     default:
       return storeInPreviewDatabase(doc)
+        .then(() => `Stored ${doc.id} in preview database.`)
   }
 }
 
@@ -50,10 +51,6 @@ const storeInBothDatabases = (doc) =>
 const removeFromBothDatabases = (doc) =>
   Promise.all([ removeFromLiveDatabase(doc), removeFromPreviewDatabase(doc) ])
     .then(_msgs => `Removed ${doc.id} from both databases.`)
-
-const removeFromLiveAndStoreInPreviewDatabase = (doc) =>
-  Promise.all([ storeInPreviewDatabase(doc), removeFromLiveDatabase(doc) ])
-    .then(_msgs => `Removed ${doc.id} from live, and stored it in preview.`)
 
 module.exports = {
   storePost: (data) => storeBasedOnStatus(transformPost(data))
