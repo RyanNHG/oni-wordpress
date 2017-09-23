@@ -33,8 +33,17 @@ app.get('/', (req, res) =>
     .catch(reason => res.json({ error: reason }))
 )
 
+app.get('/professionals/:slug', (req, res) =>
+  getProfessionalBySlug(req.params.slug)
+    .then(professional => res.json(professional))
+    .catch(reason => res.json({ error: reason }))
+)
+
 const getProfessionals = () =>
   Professional.find().lean().exec()
+
+const getProfessionalBySlug = (slug) =>
+  Professional.findOne({ slug }).lean().exec()
 
 // Start app
 app.listen(port, () =>
