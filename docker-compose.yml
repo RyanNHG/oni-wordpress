@@ -2,14 +2,14 @@ version: '3'
 services:
 
   mysql:
-    image: mariadb
+    image: ryannhg/oni-db:latest
     ports:
       - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: password
 
   cms:
-    image: wordpress
+    image: ryannhg/oni-cms:latest
     ports:
       - 8080:80
     environment:
