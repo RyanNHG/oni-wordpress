@@ -61,7 +61,7 @@ function publishhook_log_response ($response) {
 }
 
 
-// Functions
+// Save Action
 function publishhook_post_saved ($post_id, $post) {
     publishhook_log($post->post_type.' '.$post_id.' has status "'.$post->post_status.'".');
 
@@ -100,7 +100,6 @@ function publishhook_transform_post_meta_to_acf ($post_meta) {
     return $meta;
 }
 
-// Actions
 function publishhook_add_all_actions () {
     add_action("save_post", "publishhook_post_saved", 10 , 2);
 }

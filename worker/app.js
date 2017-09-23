@@ -17,20 +17,17 @@ const { storeDocument } = require('./data.js')
 app.post('/api', (req, res) =>
   (token === req.body.token)
     ? storeDocument(req.body.data)
-        .then(({ message, data }) => res.json({
+        .then(message => res.json({
           error: false,
-          message,
-          data
+          message
         }))
         .catch(reason => res.json({
           error: true,
-          message: reason,
-          data: undefined
+          message: reason
         }))
     : res.json({
       error: true,
-      message: `Invalid token provided.`,
-      data: undefined
+      message: `Invalid token provided.`
     })
 )
 
