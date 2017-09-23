@@ -14,6 +14,9 @@ function publishhook_get_endpoint ( $relativeUrl = '' ) {
 function publishhook_get_token () {
     return getenv('WP_SECRET_TOKEN');
 }
+function publishhook_use_rest_api () {
+    return false;
+}
 
 
 // Debugging
@@ -61,20 +64,45 @@ function publishhook_log_response ($response) {
 // Functions
 function publishhook_post_saved ($post_id, $post) {
     publishhook_log($post->post_type.' '.$post_id.' has status "'.$post->post_status.'".');
-}
 
+    $acf = array();
 
-// Action hooks
-function publishhook_action_function_map () {
-    return array(
-        "save_post" => "publishhook_post_saved"
-    );
-}
-
-function publishhook_add_all_actions () {
-    foreach (publishhook_action_function_map() as $actionName => $functionName) {
-        add_action($actionName, $functionName, 10 , 2);
+    if (publishhook_use_rest_api()) {
+        publishhook_log('Fetching post meta through REST API...');
+        // ... request to self
+    } else {
+        publishhook_log('Fetching post meta through "get_post_meta"...');
+        $post_meta = get_post_meta($post_id);
+        $acf = publishhook_transform_post_meta_to_acf($post_meta);
     }
+
+    $response = publishhook_post(publishhook_get_endpoint(), array(
+        'token' => publishhook_get_token(),
+        'data' => array(
+            'id' => $post_id,
+            'slug' => $post->post_name,
+            'type' => $post->post_type,
+            'status' => $post->post_status,
+            'acf' => $acf
+        )
+    ));
+
+    publishhook_log_response($response);
+}
+
+function publishhook_doesnt_start_with_underscore ($word) {
+    return substr($word, 0, 1) != "_";
+}
+
+function publishhook_transform_post_meta_to_acf ($post_meta) {
+    $meta = array_filter($post_meta, 'publishhook_doesnt_start_with_underscore', ARRAY_FILTER_USE_KEY);
+    $meta = array_map('array_shift', $meta);
+    return $meta;
+}
+
+// Actions
+function publishhook_add_all_actions () {
+    add_action("save_post", "publishhook_post_saved", 10 , 2);
 }
 
 // Plugin Lifecycle

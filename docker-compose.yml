@@ -27,6 +27,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5000:80
+      - 5001:9229
     environment:
       WP_SECRET_TOKEN: super-secret-token
     volumes:
@@ -45,6 +46,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 3000:80
+      - 3001:9229
     volumes:
       - ./web:/usr/src/app
     links:
