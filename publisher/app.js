@@ -33,5 +33,5 @@ app.post('/api', (req, res) =>
 
 // Start app
 app.listen(port, () =>
-  console.info(`Worker ready at http://localhost:${port}`)
+  console.info(`Publisher ready at http://localhost:${port}`)
 )

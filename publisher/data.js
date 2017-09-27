@@ -12,6 +12,8 @@ const storeBasedOnStatus = (doc) => {
       return storeInBothDatabases(doc)
     case 'trash':
       return removeFromBothDatabases(doc)
+    case 'auto-draft':
+      return Promise.resolve('Took no action.')
     default:
       return storeInPreviewDatabase(doc)
         .then(() => `Stored ${doc.id} in preview database.`)
