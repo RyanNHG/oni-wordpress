@@ -7,8 +7,10 @@
 
 1. Run __`docker-compose up`__
 
+1. Optional: Restore with __`docker exec oniwordpress_cms_1 wp --allow-root import dump.sql`__
 
-## Doing stuff
+
+### Doing stuff
 
 1. Use Wordpress: [http://localhost:8080/wp-login.php](http://localhost:8080/wp-login.php)
 

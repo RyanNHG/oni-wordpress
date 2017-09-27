@@ -5,8 +5,8 @@ services:
     image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: password
-    volumes:
-      - ./cms/backups:/docker-entrypoint-initdb.d
+    # volumes:
+      # - ./cms/backups:/docker-entrypoint-initdb.d
 
   cms:
     build:
