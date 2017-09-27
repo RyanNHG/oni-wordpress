@@ -2,36 +2,46 @@ version: '3'
 services:
 
   mysql:
-    image: ryannhg/oni-db:latest
+    image: mariadb:latest
     environment:
       MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - ./cms/backups:/docker-entrypoint-initdb.d
 
   cms:
-    image: ryannhg/oni-cms:latest
+    build:
+      context: ./cms
+      dockerfile: Dockerfile
+    image: ryannhg/oni-cms
     ports:
       - 8080:80
     environment:
       WORDPRESS_DB_PASSWORD: password
-      WP_ENDPOINT_URL: http://worker/api
+      WP_ENDPOINT_URL: http://publisher/api
       WP_SECRET_TOKEN: super-secret-token
+      WP_ADMIN_USER: admin
+      WP_ADMIN_EMAIL: admin@onenorth.com
+      WP_ADMIN_PASSWORD: password
     volumes:
-      - ./cms/publish-hook:/var/www/html/wp-content/plugins/publish-hook
+      - ./cms/plugins/publish-hook:/var/www/html/wp-content/plugins/publish-hook
+      - ./cms/plugins/keep-live-posts:/var/www/html/wp-content/plugins/keep-live-posts
+      - ./cms/plugins/publish-buttons:/var/www/html/wp-content/plugins/publish-buttons
     links:
       - mysql
 
-  worker:
+  publisher:
     build:
-      context: ./worker
+      context: ./publisher
       dockerfile: Dockerfile
-    image: ryannhg/oni-worker:latest
+    image: ryannhg/oni-publisher
     environment:
       WP_SECRET_TOKEN: super-secret-token
       LIVE_MONGO_URI: mongodb://mongo/cms-live
       PREVIEW_MONGO_URI: mongodb://mongo/cms-preview
     volumes:
-      - ./worker/app.js:/usr/src/app/app.js
-      - ./worker/data.js:/usr/src/app/data.js
-      - ./worker/logic.js:/usr/src/app/logic.js
+      - ./publisher/app.js:/usr/src/app/app.js
+      - ./publisher/data.js:/usr/src/app/data.js
+      - ./publisher/logic.js:/usr/src/app/logic.js
     links:
       - cms
 
@@ -42,7 +52,7 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    image: ryannhg/oni-web:latest
+    image: ryannhg/oni-web
     environment:
       MONGO_URI: mongodb://mongo/cms-live
     ports:
